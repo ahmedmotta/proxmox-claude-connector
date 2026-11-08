@@ -25,6 +25,9 @@ ask()  { local __v=$1 __q=$2 __d=${3:-} __a; read -r -p "$__q${__d:+ [$__d]}: " 
 ask_secret() { local __v=$1 __q=$2 __a; read -r -s -p "$__q: " __a </dev/tty || true; echo; printf -v "$__v" '%s' "$__a"; }
 
 [[ $EUID -eq 0 ]] || die "run as root on a Proxmox node"
+# A locale from the SSH client (e.g. en_US.UTF-8) usually does not exist inside the new container.
+export LC_ALL=C.UTF-8 LANG=C.UTF-8
+unset LANGUAGE
 command -v pveversion >/dev/null || die "this is not a Proxmox VE node"
 
 echo
@@ -35,6 +38,9 @@ echo
 ask PUBLIC_URL "Public HTTPS URL Claude will use (e.g. https://pve-mcp.example.com)" ""
 [[ $PUBLIC_URL == https://* ]] || die "the URL must start with https://"
 PUBLIC_URL=${PUBLIC_URL%/}
+PUBLIC_URL=${PUBLIC_URL%/mcp}   # people often paste the full connector URL; the base is wanted here
+[[ $PUBLIC_URL =~ ^https://[A-Za-z0-9.-]+(:[0-9]+)?$ ]] \
+  || die "give only the address, e.g. https://pve-mcp.example.com (no path)"
 ask_secret CF_TUNNEL_TOKEN "Cloudflare Tunnel token (Enter to skip and set it up later)"
 while :; do
   ask_secret ADMIN_PW "Admin password to approve Claude's connection (12+ characters)"
