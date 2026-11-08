@@ -113,13 +113,22 @@ if [[ -n $OLD_CT ]]; then
   pct destroy "$OLD_CT" --purge >/dev/null
 fi
 
+# DNS for a static-IP container. The host's own resolvers can be local-only (127.x, Tailscale's
+# 100.100.100.100, other 100.64.0.0/10 addresses), which the container cannot reach.
+GW=$(sed -n 's/.*gw=\([^,]*\).*/\1/p' <<<"$CT_IP")
+DNS_SERVERS=$( { awk '/^nameserver/ {print $2}' /etc/resolv.conf \
+  | grep -Ev '^(127\.|::1$|100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.)' || true; } | head -2 | tr '\n' ' ')
+DNS_SERVERS="${DNS_SERVERS}${GW:+$GW }1.1.1.1"
+DNS_ARGS=()
+[[ $CT_IP == dhcp ]] || DNS_ARGS=(--nameserver "$DNS_SERVERS")
+
 CTID=$(pvesh get /cluster/nextid)
 say "Creating container $CTID (pve-connector)"
 pct create "$CTID" "local:vztmpl/$TEMPLATE" \
   --hostname pve-connector --description "Proxmox Claude Connector - https://github.com/$REPO" \
   --tags claude --cores 1 --memory 512 --swap 256 --rootfs "$STORAGE:4" \
   --net0 "name=eth0,bridge=$BRIDGE,ip=$CT_IP" --unprivileged 1 --features nesting=1 \
-  --onboot 1 "${OSTYPE_ARGS[@]}" >/dev/null
+  --onboot 1 "${OSTYPE_ARGS[@]}" "${DNS_ARGS[@]}" >/dev/null
 pct start "$CTID"
 
 if [[ ${#OSTYPE_ARGS[@]} -gt 0 ]]; then
@@ -130,7 +139,6 @@ if [[ ${#OSTYPE_ARGS[@]} -gt 0 ]]; then
     if [[ $CT_IP == dhcp ]]; then
       printf 'iface eth0 inet dhcp\n'
     else
-      GW=$(sed -n 's/.*gw=\([^,]*\).*/\1/p' <<<"$CT_IP")
       printf 'iface eth0 inet static\n    address %s\n' "${CT_IP%%,*}"
       [[ -n $GW ]] && printf '    gateway %s\n' "$GW"
     fi
@@ -141,7 +149,10 @@ if [[ ${#OSTYPE_ARGS[@]} -gt 0 ]]; then
   pct push "$CTID" "$NETDIR/interfaces" /etc/network/interfaces --perms 0644
   pct push "$CTID" "$NETDIR/hostname" /etc/hostname --perms 0644
   pct push "$CTID" "$NETDIR/hosts" /etc/hosts --perms 0644
-  [[ $CT_IP == dhcp ]] || pct push "$CTID" /etc/resolv.conf /etc/resolv.conf --perms 0644
+  if [[ $CT_IP != dhcp ]]; then
+    for ns in $DNS_SERVERS; do printf 'nameserver %s\n' "$ns"; done >"$NETDIR/resolv.conf"
+    pct push "$CTID" "$NETDIR/resolv.conf" /etc/resolv.conf --perms 0644
+  fi
   rm -rf "$NETDIR"
   pct exec "$CTID" -- bash -c 'hostname pve-connector; systemctl restart networking || ifup eth0' || true
 fi
@@ -151,7 +162,17 @@ for _ in $(seq 1 60); do
   pct exec "$CTID" -- getent hosts deb.debian.org >/dev/null 2>&1 && break
   sleep 2
 done
-pct exec "$CTID" -- getent hosts deb.debian.org >/dev/null 2>&1 || die "container $CTID has no internet access"
+if ! pct exec "$CTID" -- getent hosts deb.debian.org >/dev/null 2>&1; then
+  warn "container $CTID cannot reach the internet. Diagnosis:"
+  pct exec "$CTID" -- ip -4 -o addr show eth0 2>&1 | sed 's/^/    /' || true
+  pct exec "$CTID" -- ip route 2>&1 | sed 's/^/    route: /' || true
+  pct exec "$CTID" -- cat /etc/resolv.conf 2>&1 | sed 's/^/    /' || true
+  if [[ -n $GW ]]; then
+    pct exec "$CTID" -- ping -c1 -W2 "$GW" >/dev/null 2>&1 && echo "    gateway $GW: reachable" || echo "    gateway $GW: NOT reachable (check the IP, mask and bridge)"
+  fi
+  pct exec "$CTID" -- ping -c1 -W2 1.1.1.1 >/dev/null 2>&1 && echo "    internet by IP: OK (so DNS is the problem)" || echo "    internet by IP: NOT reachable"
+  die "fix the network above, then run this setup again (it will offer to replace container $CTID)"
+fi
 
 # ---- settings file ---------------------------------------------------------------------
 ADMIN_HASH=$(python3 - "$ADMIN_PW" <<'PY'
