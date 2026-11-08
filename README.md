@@ -68,12 +68,13 @@ computer, and no port is opened on your router.
    search the dashboard for "Tunnels" if it has moved.)
 2. On the install screen, copy the **token** — the long string after `--token` in any of the
    shown commands. You will paste it in step 3. Do not run Cloudflare's own install command.
-3. Add a **public hostname** for the tunnel (called a *published application route* in newer
-   dashboards):
+3. Open the tunnel, choose **Add a route → Published application** (older dashboards call it
+   *Public hostname*) and fill in:
 
    | Field | Value |
    |---|---|
    | Subdomain / domain | e.g. `pve-mcp` . `example.com` |
+   | Path | leave empty |
    | Service type | `HTTP` |
    | URL | `localhost:8765` |
 
@@ -155,6 +156,8 @@ Start a chat and ask: *"Give me an overview of my Proxmox."*
 ## Manage it from the Proxmox web interface
 
 After installation, reload the Proxmox page (Ctrl+F5) and open **Datacenter → Claude Connector**:
+
+![The Claude Connector tab under Datacenter in the Proxmox VE web interface](docs/images/proxmox-tab.png)
 
 - **Status** — running or paused, the URL to give Claude, mode, SSH, version.
 - **Pause connector** — a kill switch: every action from Claude is refused until you resume.
