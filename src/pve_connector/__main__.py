@@ -104,6 +104,9 @@ def main(argv: list[str] | None = None) -> None:
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
         stream=sys.stderr,
     )
+    # Per-request lines from the HTTP and SSH libraries are noise in the journal and in `check`.
+    for noisy in ("httpx", "httpcore", "paramiko"):
+        logging.getLogger(noisy).setLevel(logging.WARNING)
 
     if command == "serve":
         from .server import serve_http
