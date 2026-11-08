@@ -1,0 +1,32 @@
+# Docker alternative to deploy/install.sh.
+#   cp .env.example .env   # fill it in; keep CONNECTOR_BIND_HOST=0.0.0.0 here
+#   echo "CF_TUNNEL_TOKEN=..." >> .env
+#   docker compose up -d
+# In Cloudflare, point the tunnel's public hostname at  http://connector:8765
+services:
+  connector:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      CONNECTOR_BIND_HOST: 0.0.0.0
+      CONNECTOR_DATA_DIR: /data
+    volumes:
+      - connector-data:/data
+      # SSH key for host shell / container commands (optional):
+      # - ./ssh/id_ed25519:/data/id_ed25519:ro
+      # Proxmox CA (optional, recommended):
+      # - ./pve-root-ca.pem:/data/pve-root-ca.pem:ro
+    # No ports published: only the tunnel reaches the connector.
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${CF_TUNNEL_TOKEN}
+    depends_on:
+      - connector
+
+volumes:
+  connector-data:
