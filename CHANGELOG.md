@@ -1,5 +1,19 @@
 # Changelog
 
+## GUI 0.4.0 — 2026-11-08
+
+A complete redesign of the Proxmox web interface theme, from a recolor into a console layout:
+
+- Full-bleed app shell: a taller top bar with the brand, a version badge and a wide search, a
+  sidebar for the resource tree, a page header and a section navigation with rounded selections.
+- Every titled panel becomes a card with rounded corners on a darker canvas, and Proxmox's own
+  spacing becomes the gutter between cards.
+- Modern tables (uppercase headers, taller rows, no column rules), gradient primary buttons,
+  rounded inputs with a soft focus ring, elevated menus and windows, a blurred dialog backdrop.
+- A full-screen, branded sign-in page.
+- Charts with a fill that fades from the line to the axis.
+- Light theme rebuilt to match: white surfaces on a light canvas, white top bar.
+
 ## GUI 0.3.0 — 2026-11-08
 
 A new look for the whole Proxmox VE web interface, installed with the tab:

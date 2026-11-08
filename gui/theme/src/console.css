@@ -1,0 +1,407 @@
+/*
+ * The console layout: a full-bleed app shell (top bar, sidebar, page header, section navigation)
+ * with the content on a canvas, where every titled panel becomes a card.
+ * Hooks (pcc-west, pcc-tree, pcc-content, pcc-config, ...) are classes claude-theme.js adds.
+ * Sizes changed here are all measured by ExtJS at layout time (paddings, line heights, borders on
+ * toolbars and panel headers); nothing ExtJS positions from fixed numbers is touched.
+ */
+
+/* ---------------------------------------------------------------- shell */
+:root body.x-border-layout-ct,
+:root .pcc-content,
+:root .pcc-content > .x-container-body,
+:root .pcc-config > .x-panel-bodyWrap > .x-panel-body,
+:root .pcc-content .x-panel-body-default {
+    background-color: var(--pcc-bg0);
+}
+:root .pcc-west,
+:root .pcc-west > .x-container-body {
+    background-color: var(--pcc-sidebar);
+}
+/* splitters become hairlines; the 5px handle stays for resizing */
+:root .x-splitter-vertical {
+    background: linear-gradient(var(--pcc-line), var(--pcc-line)) right / 1px 100% no-repeat, var(--pcc-sidebar);
+}
+:root .x-splitter-horizontal {
+    background: linear-gradient(var(--pcc-line), var(--pcc-line)) bottom / 100% 1px no-repeat, var(--pcc-bg0);
+}
+:root .x-splitter-vertical:hover,
+:root .x-splitter-active.x-splitter-vertical {
+    background: linear-gradient(var(--pcc-accent), var(--pcc-accent)) right / 2px 100% no-repeat, var(--pcc-sidebar);
+}
+:root .x-splitter-horizontal:hover,
+:root .x-splitter-active.x-splitter-horizontal {
+    background: linear-gradient(var(--pcc-accent), var(--pcc-accent)) bottom / 100% 2px no-repeat, var(--pcc-bg0);
+}
+
+/* ---------------------------------------------------------------- sidebar: view selector + resource tree */
+:root .pcc-west-head {
+    background-color: var(--pcc-sidebar);
+    padding: 12px 10px 8px 12px;
+}
+:root .pcc-west-head .x-form-trigger-wrap-default {
+    border-radius: 8px;
+    background-color: var(--pcc-bg1);
+}
+:root .pcc-tree,
+:root .pcc-tree > .x-panel-bodyWrap > .x-panel-body,
+:root .pcc-tree .x-grid-view,
+:root .pcc-tree .x-grid-item,
+:root .pcc-tree .x-grid-item .x-grid-cell {
+    background-color: var(--pcc-sidebar);
+    border-color: transparent;
+}
+:root .pcc-tree .x-grid-item .x-grid-cell {
+    border-width: 0;
+}
+:root .pcc-tree .x-grid-cell-inner {
+    margin: 0 8px;
+    border-radius: 8px;
+    padding-top: 4px;
+    padding-bottom: 4px;
+    color: var(--pcc-text2);
+}
+:root .pcc-tree .x-grid-item-over .x-grid-cell-inner {
+    background-color: var(--pcc-hover);
+    color: var(--pcc-text);
+}
+:root .pcc-tree .x-grid-item-selected .x-grid-cell-inner,
+:root .pcc-tree .x-grid-item-selected.x-grid-item-over .x-grid-cell-inner {
+    background-color: var(--pcc-pill);
+    color: var(--pcc-text);
+    font-weight: 600;
+}
+:root .pcc-tree .x-grid-item-selected .x-grid-cell,
+:root .pcc-tree .x-grid-item-selected .x-grid-cell:first-child {
+    box-shadow: none;
+    background-color: var(--pcc-sidebar);
+}
+:root .pcc-tree .x-grid-item-focused .x-grid-cell-inner::before {
+    border-radius: 8px;
+}
+:root .pcc-tree .x-tree-node-text {
+    padding-left: 2px;
+}
+
+/* ---------------------------------------------------------------- page header and section navigation */
+:root .pcc-config-head.x-toolbar {
+    background-color: var(--pcc-bg0);
+    border-width: 0;
+    box-shadow: inset 0 -1px 0 var(--pcc-line);
+    padding: 11px 14px 11px 18px;
+}
+:root .pcc-config-head .x-panel-header-text-default {
+    font-size: 17px;
+    letter-spacing: -0.015em;
+}
+:root .pcc-config-nav.x-toolbar,
+:root .pcc-config-nav .x-treelist-pve-nav,
+:root .pcc-config-nav .x-treelist-pve-nav .x-treelist-item {
+    background-color: var(--pcc-sidebar);
+}
+:root .pcc-config-nav.x-toolbar {
+    border-width: 0 1px 0 0;
+    border-style: solid;
+    border-color: var(--pcc-line);
+    padding-top: 8px;
+}
+:root .x-treelist-pve-nav .x-treelist-row {
+    margin: 1px 8px;
+    border-radius: 8px;
+}
+:root .x-treelist-pve-nav .x-treelist-row-over {
+    background-color: var(--pcc-hover);
+}
+:root .x-treelist-pve-nav .x-treelist-item-selected > .x-treelist-row,
+:root .x-treelist-pve-nav .x-treelist-item-selected > .x-treelist-row-over {
+    background-color: var(--pcc-pill);
+    box-shadow: none;
+}
+:root .x-treelist-pve-nav .x-treelist-item-text {
+    color: var(--pcc-text2);
+}
+:root .x-treelist-pve-nav .x-treelist-row-over .x-treelist-item-text,
+:root .x-treelist-pve-nav .x-treelist-item-selected > .x-treelist-row .x-treelist-item-text {
+    color: var(--pcc-text);
+}
+:root .x-treelist-pve-nav .x-treelist-item-icon {
+    color: var(--pcc-text3);
+}
+:root .x-treelist-pve-nav .x-treelist-item-selected > .x-treelist-row .x-treelist-item-icon {
+    color: var(--pcc-accent);
+}
+
+/* ---------------------------------------------------------------- cards: every titled panel in the content */
+/* Proxmox often pads the panel element itself to space panels apart, so the card is drawn on its
+   header and body: the padding stays canvas and becomes the gutter between cards. */
+:root .pcc-content .x-panel:has(> .x-panel-header) {
+    background-color: transparent;
+}
+:root .pcc-content .x-panel:has(> .x-panel-header) > .x-panel-header {
+    background-color: var(--pcc-card);
+    border-color: transparent;
+    border-radius: 12px 12px 0 0;
+    box-shadow: 0 0 0 1px var(--pcc-card-border);
+    padding: 12px 14px 12px 16px;
+}
+:root .pcc-content .x-panel:has(> .x-panel-header) > .x-panel-header .x-title-text {
+    font-size: 13.5px;
+    color: var(--pcc-text);
+}
+:root .pcc-content .x-panel:has(> .x-panel-header) > .x-panel-bodyWrap {
+    background-color: var(--pcc-card);
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 0 0 1px var(--pcc-card-border), var(--pcc-card-shadow);
+    overflow: hidden;
+}
+:root .pcc-content .x-panel:has(> .x-panel-header) > .x-panel-bodyWrap > .x-panel-body,
+:root .pcc-content .x-panel:has(> .x-panel-header) .x-panel-body-default {
+    background-color: var(--pcc-card);
+}
+/* in the content, separation comes from cards and hairlines, not from panel body borders */
+:root .pcc-content .x-panel-body-default {
+    border-color: transparent;
+}
+/* action bars of untitled views (above a table, the time range of a summary) sit on the canvas */
+:root .pcc-content .x-panel:not(:has(> .x-panel-header)) > .x-panel-bodyWrap > .x-toolbar-docked-top {
+    background-color: var(--pcc-bg0);
+    border-color: transparent;
+}
+/* the south drawer (tasks and cluster log) */
+:root .pcc-south,
+:root .pcc-south > .x-panel-bodyWrap > .x-panel-body,
+:root .pcc-south .x-tab-bar-default,
+:root .pcc-south .x-tab-bar-body-default,
+:root .pcc-south .x-panel-header-default {
+    background-color: var(--pcc-card);
+}
+
+/* ---------------------------------------------------------------- tables */
+:root .x-grid-header-ct,
+:root .x-column-header {
+    background-color: var(--pcc-bg2);
+    border-color: var(--pcc-line);
+}
+:root .x-column-header {
+    border-right-color: transparent;
+}
+:root .x-column-header-inner {
+    padding-top: 9px;
+    padding-bottom: 8px;
+}
+:root .x-column-header-text-inner,
+:root .x-column-header-text {
+    color: var(--pcc-text3);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+:root .x-column-header-over .x-column-header-text-inner,
+:root .x-column-header-sort-ASC .x-column-header-text-inner,
+:root .x-column-header-sort-DESC .x-column-header-text-inner {
+    color: var(--pcc-text);
+}
+:root .x-grid-cell-inner {
+    padding-top: 8px;
+    padding-bottom: 8px;
+}
+:root .x-grid-item-over .x-grid-cell,
+:root .x-grid-item-over.x-grid-item {
+    background-color: var(--pcc-hover);
+}
+
+/* ---------------------------------------------------------------- buttons */
+:root .x-btn-default-small {
+    background-image: linear-gradient(180deg, var(--pcc-btn-top), var(--pcc-btn-bottom));
+    border-color: var(--pcc-btn-border);
+    border-radius: 8px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 1px 2px rgba(0, 0, 0, 0.22);
+}
+:root .x-btn-default-small.x-btn-over {
+    background-image: linear-gradient(180deg, #ff8b3d, var(--pcc-accent));
+}
+:root .x-btn-default-small.x-btn-pressed,
+:root .x-btn-default-small.x-btn-menu-active {
+    background-image: linear-gradient(180deg, var(--pcc-btn-bottom), var(--pcc-accent-press));
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+:root .x-btn-default-small.x-btn-disabled,
+:root .x-btn.proxmox-inline-button.x-btn-default-small,
+:root .x-btn.pcc-secondary.x-btn-default-small {
+    background-image: none;
+    box-shadow: none;
+}
+:root .x-btn-default-toolbar-small {
+    border-radius: 8px;
+}
+/* Proxmox styles some plain buttons as toolbar buttons with an extra class: keep them neutral */
+:root .x-btn.x-btn-default-small.x-btn-default-toolbar-small {
+    background-image: none;
+    background-color: var(--pcc-bg1);
+    border-color: var(--pcc-line2);
+    box-shadow: none;
+}
+:root .x-btn.x-btn-default-small.x-btn-default-toolbar-small .x-btn-inner,
+:root .x-btn.x-btn-default-small.x-btn-default-toolbar-small .x-btn-icon-el {
+    color: var(--pcc-text);
+}
+:root .x-btn.x-btn-default-small.x-btn-default-toolbar-small.x-btn-over {
+    background-color: var(--pcc-bg3);
+}
+
+/* ---------------------------------------------------------------- tags */
+:root .proxmox-tag-light,
+:root .proxmox-tag-dark {
+    border-radius: 999px;
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+/* ---------------------------------------------------------------- inputs */
+:root .x-form-trigger-wrap-default,
+:root .x-form-text-wrap-default {
+    border-radius: 8px;
+}
+:root .x-form-trigger-wrap-default,
+:root .x-form-text-default,
+:root .x-form-text-wrap-default,
+:root textarea.x-form-text-default {
+    background-color: var(--pcc-input);
+}
+:root .x-form-trigger-wrap-focus,
+:root .x-form-trigger-wrap-default.x-form-trigger-wrap-focus {
+    box-shadow: var(--pcc-focus);
+}
+
+/* ---------------------------------------------------------------- menus, windows, tooltips */
+:root .x-menu-default,
+:root .x-menu-body-default,
+:root .x-boundlist {
+    background-color: var(--pcc-elevated);
+    border-color: var(--pcc-elevated-border);
+}
+:root .x-menu-default,
+:root .x-boundlist-floating {
+    border-radius: 12px;
+    box-shadow: var(--pcc-elevated-shadow);
+}
+:root .x-menu-item-active {
+    border-radius: 6px;
+}
+:root .x-window-default {
+    border-radius: 14px;
+    border-color: var(--pcc-elevated-border);
+    box-shadow: var(--pcc-elevated-shadow);
+}
+:root .x-window-default,
+:root .x-window-header-default,
+:root .x-window-body-default,
+:root .x-window-default .x-toolbar-footer {
+    background-color: var(--pcc-elevated);
+}
+:root .x-window-header-default {
+    border-width: 0;
+    box-shadow: inset 0 -1px 0 var(--pcc-line);
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+:root .x-window-header-title-default > .x-title-text-default {
+    font-family: var(--pcc-font-display);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.01em;
+}
+:root .x-window-default .x-toolbar-footer {
+    box-shadow: inset 0 1px 0 var(--pcc-line);
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+:root body > .x-mask {
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+}
+:root .x-tip-default {
+    background-color: var(--pcc-elevated);
+    border-color: var(--pcc-elevated-border);
+    border-radius: 8px;
+    box-shadow: var(--pcc-elevated-shadow);
+}
+
+/* ---------------------------------------------------------------- full-screen sign-in */
+:root.pcc-login-open body > .x-mask {
+    opacity: 1;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background-color: var(--pcc-login-bg);
+    background-image:
+        radial-gradient(1000px 560px at 10% 0%, var(--pcc-login-glow), transparent 62%),
+        radial-gradient(820px 520px at 95% 100%, var(--pcc-login-glow2), transparent 60%),
+        linear-gradient(var(--pcc-login-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--pcc-login-grid) 1px, transparent 1px);
+    background-size: auto, auto, 56px 56px, 56px 56px;
+    background-repeat: no-repeat, no-repeat, repeat, repeat;
+    background-position: 0 0, 0 0, -1px -1px, -1px -1px;
+}
+:root.pcc-login-open body > .x-mask::before {
+    content: var(--pcc-brand-name, "");
+    position: absolute;
+    top: 34px;
+    left: 40px;
+    height: 36px;
+    padding-left: 48px;
+    background: var(--pcc-brand-logo, none) left center / 36px 36px no-repeat;
+    font-family: var(--pcc-font-display);
+    font-weight: 600;
+    font-size: 19px;
+    line-height: 36px;
+    letter-spacing: -0.015em;
+    color: var(--pcc-login-text);
+}
+:root.pcc-login-open body > .x-mask::after {
+    content: "Proxmox Virtual Environment";
+    position: absolute;
+    left: 40px;
+    bottom: 30px;
+    font-family: var(--pcc-font);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--pcc-login-text2);
+}
+:root .pcc-login.x-window-default {
+    border-radius: 18px;
+    box-shadow: 0 0 0 1px var(--pcc-elevated-border), 0 30px 80px rgba(0, 0, 0, 0.45);
+}
+:root .pcc-login .x-window-header-default {
+    box-shadow: none;
+    padding: 24px 26px 8px;
+}
+:root .pcc-login .x-window-header-title-default > .x-title-text-default {
+    font-size: 20px;
+    color: var(--pcc-text);
+}
+:root .pcc-login .x-window-default .x-toolbar-footer,
+:root .pcc-login .x-toolbar-footer {
+    box-shadow: none;
+    padding: 8px 26px 24px;
+}
+:root .pcc-login .x-window-header-default {
+    border-color: transparent;
+}
+:root .pcc-login .x-window-body-default,
+:root .pcc-login .x-panel-body-default {
+    border-color: transparent;
+    background-color: var(--pcc-elevated);
+}
+:root .pcc-login .x-window-item > .x-panel-bodyWrap > .x-panel-body {
+    padding: 12px 26px 4px 12px;
+}
+:root .pcc-login .x-title-icon {
+    width: 26px;
+    height: 26px;
+    vertical-align: middle;
+}
+:root .pcc-login .x-title-text {
+    padding-left: 11px;
+}

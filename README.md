@@ -188,12 +188,15 @@ pve-claude-gui remove --all-nodes
 
 ## A new look for the Proxmox interface
 
-The setup also installs a theme for the whole Proxmox web interface, in dark and light. It changes
-colors, type and details only: every screen, menu and dialog works exactly as before.
+The setup also installs a new look for the whole Proxmox web interface, in dark and light: a console
+layout with a brand top bar, a sidebar, cards, modern tables and a full-screen sign-in page. It
+changes how Proxmox looks, not how it works: every screen, menu and dialog does exactly what it did.
 
 ![Proxmox VE with the dark theme](docs/images/theme-dark.png)
 
 ![Proxmox VE with the light theme](docs/images/theme-light.png)
+
+![The sign-in page](docs/images/theme-login.png)
 
 - **Switcher in the top bar** — dark, light, or back to the stock Proxmox look. The themes are also
   listed in Proxmox's own *user menu → Color Theme*. Each browser remembers its own choice.

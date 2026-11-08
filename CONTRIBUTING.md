@@ -32,8 +32,10 @@ classes so a failure can never break the Proxmox interface, and test on Proxmox 
 `python3 gui/theme/build.py` and commit `dist/` with your change: the installer copies `dist/` as it
 is, after checking it against `dist/SHA256SUMS`, and CI fails when `dist/` is out of date.
 
-- Only colors, fonts, borders and shadows: never change sizes, paddings or positions, or ExtJS
-  layouts will overlap.
+- Change only sizes ExtJS measures when it lays out (paddings and line heights of toolbars, panel
+  headers, table cells and navigation rows). Never add margins to components ExtJS positions, and
+  never change fixed heights; region margins and the top bar height are set from
+  `claude-theme.js` instead, where ExtJS takes them into account.
 - Check every new color pair for WCAG AA contrast (4.5:1 for text) in both themes.
 - `claude-theme.js` follows the same rules as the tab: no `'use strict'`, and every override wrapped
   in `try`/`catch`.

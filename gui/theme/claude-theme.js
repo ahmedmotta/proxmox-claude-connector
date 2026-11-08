@@ -106,7 +106,9 @@
             '.pcc-switch button:hover{color:var(--pcc-switch-fg-hover,#333)}',
             '.pcc-switch button[aria-pressed=true]{background:var(--pcc-accent,#ff6a00);color:#0b0b0c}',
             '.pcc-switch button:focus-visible{outline:2px solid var(--pcc-accent,#ff6a00);outline-offset:1px}',
-            '.pcc-header{--pcc-switch-line:#2a2a2f;--pcc-switch-bg:#0c0c0d;--pcc-switch-fg:#8b8b93;--pcc-switch-fg-hover:#ededee}',
+            '.pcc-header{--pcc-switch-line:var(--pcc-header-input-line);--pcc-switch-bg:var(--pcc-header-input);',
+            '--pcc-switch-fg:var(--pcc-header-text2);--pcc-switch-fg-hover:var(--pcc-header-text)}',
+            '.pcc-header .pcc-switch-group{padding:3px}.pcc-header .pcc-switch button{width:28px;height:24px;line-height:24px}',
         ].join('');
         document.head.appendChild(style);
     } catch (e) {
@@ -115,6 +117,13 @@
 
     if (active) {
         document.documentElement.classList.add('pcc-theme', 'pcc-theme-' + mode);
+        try {
+            // the full-screen sign-in shows the brand from CSS
+            document.documentElement.style.setProperty('--pcc-brand-name', JSON.stringify(BRAND.name));
+            document.documentElement.style.setProperty('--pcc-brand-logo', 'url(' + JSON.stringify(BRAND.logo) + ')');
+        } catch (e) {
+            log(e);
+        }
     }
 
     // ---- a browser that cached an older theme file fetches the current one ---------------------
@@ -210,16 +219,43 @@
 
                     north.addCls('pcc-header');
                     var info = north.down('#versioninfo');
-                    if (info) { info.setHtml('Proxmox VE'); }
-                    north.setHeight(46);
+                    if (info) { info.setHtml('<span class="pcc-version">Proxmox VE</span>'); }
+                    var search = north.down('pveGlobalSearchField');
+                    if (search) { search.setWidth(320); }
+                    north.setHeight(56);
                     north.setMargin(0);
+
+                    // the app shell: full-bleed regions with hooks for the stylesheet
+                    var west = me.down('#west');
+                    if (west) {
+                        west.addCls('pcc-west');
+                        west.setMargin(0);
+                        var head = west.items && west.items.getAt(0);
+                        if (head && !head.isXType('treepanel')) { head.addCls('pcc-west-head'); }
+                    }
+                    var tree = me.down('pveResourceTree');
+                    if (tree) { tree.addCls('pcc-tree'); }
+                    var content = me.down('#content');
+                    if (content) {
+                        content.addCls('pcc-content');
+                        content.setMargin(0);
+                    }
+                    var south = me.down('#south');
+                    if (south) {
+                        south.addCls('pcc-south');
+                        south.setMargin(0);
+                    }
+                    // one primary action in the top bar: Create VM stays orange, Create CT turns neutral
+                    north.query('button').forEach(function (button) {
+                        if (/\bfa-cube\b/.test(button.iconCls || '')) { button.addCls('pcc-header-secondary'); }
+                    });
                     var logo = north.down('proxmoxlogo') || north.down('proxmoxLogoSvg'); // PVE 7/8 and PVE 9
                     if (logo) {
                         logo.setHidden(true);
                         north.insert(north.items.indexOf(logo), {
                             xtype: 'component',
-                            height: 30,
-                            margin: '0 4 0 14',
+                            height: 34,
+                            margin: '0 10 0 16',
                             html: '<a class="pcc-brand" href="' + Ext.htmlEncode(BRAND.url) + '" target="_blank" rel="noopener">'
                                 + '<img src="' + Ext.htmlEncode(BRAND.logo) + '" alt=""><b>' + Ext.htmlEncode(BRAND.name) + '</b></a>',
                         });
@@ -228,7 +264,7 @@
                     if (help) { help.addCls('pcc-ghost'); }
                     if (user) {
                         user.addCls('pcc-ghost');
-                        user.setMargin('0 12 0 0');
+                        user.setMargin('0 14 0 0');
                     }
                     var favicon = document.querySelector('link[rel="icon"]');
                     if (favicon) { favicon.href = BRAND.logo; }
@@ -244,7 +280,7 @@
                 try {
                     var info = me.query('#versioninfo')[0];
                     if (info && PVE.VersionInfo) {
-                        info.update('Proxmox VE ' + Ext.htmlEncode(PVE.VersionInfo.version));
+                        info.update('<span class="pcc-version">Proxmox VE ' + Ext.htmlEncode(PVE.VersionInfo.version) + '</span>');
                         info.updateLayout();
                     }
                 } catch (e) {
@@ -258,8 +294,31 @@
         return;
     }
 
-    // ---- login window ---------------------------------------------------------------------------
+    // ---- configuration views: page header and section navigation ---------------------------------
+    if (Ext.ClassManager.get('PVE.panel.Config')) {
+        Ext.define('PVE.ClaudeTheme.Config', {
+            override: 'PVE.panel.Config',
+            initComponent: function () {
+                this.callParent(arguments);
+                try {
+                    this.addCls('pcc-config');
+                    var top = this.getDockedItems('toolbar[dock=top]')[0];
+                    if (top) { top.addCls('pcc-config-head'); }
+                    var left = this.getDockedItems('toolbar[dock=left]')[0];
+                    if (left) { left.addCls('pcc-config-nav'); }
+                } catch (e) {
+                    log(e);
+                }
+            },
+        });
+    }
+
+    // ---- login window: a full-screen, branded sign-in ---------------------------------------------
     if (Ext.ClassManager.get('PVE.window.LoginWindow')) {
+        var loginOpen = function (open) {
+            // on <html>: ExtJS rewrites the class list of <body> when the viewport renders
+            try { document.documentElement.classList.toggle('pcc-login-open', open); } catch (e) { log(e); }
+        };
         Ext.define('PVE.ClaudeTheme.LoginWindow', {
             override: 'PVE.window.LoginWindow',
             initComponent: function () {
@@ -267,6 +326,13 @@
                 try {
                     this.addCls('pcc-login');
                     this.setIcon(BRAND.logo);
+                    this.setWidth(440);
+                    loginOpen(true);
+                    this.on({
+                        show: function () { loginOpen(true); },
+                        hide: function () { loginOpen(false); },
+                        destroy: function () { loginOpen(false); },
+                    });
                 } catch (e) {
                     log(e);
                 }
@@ -350,9 +416,27 @@
                 try {
                     // after the series exist, so ExtJS recolors them
                     this.setColors(CHART_COLORS);
-                    // a crisp line over a soft fill instead of a heavy 60% area
-                    (this.getSeries() || []).forEach(function (series) {
-                        series.setStyle({ opacity: 1, fillOpacity: 0.16, strokeOpacity: 1, lineWidth: 1.75 });
+                    // a crisp line over a fill that fades out towards the axis
+                    (this.getSeries() || []).forEach(function (series, index) {
+                        var color = Ext.util.Color.fromString(CHART_COLORS[index % CHART_COLORS.length]);
+                        var rgba = function (alpha) {
+                            return 'rgba(' + color.r + ',' + color.g + ',' + color.b + ',' + alpha + ')';
+                        };
+                        series.setStyle({
+                            opacity: 1,
+                            fillOpacity: 1,
+                            strokeOpacity: 1,
+                            lineWidth: 2,
+                            strokeStyle: rgba(1),
+                            fillStyle: {
+                                type: 'linear',
+                                degrees: 90,
+                                stops: [
+                                    { offset: 0, color: rgba(0.34) }, // under the line
+                                    { offset: 1, color: rgba(0.02) }, // at the axis
+                                ],
+                            },
+                        });
                     });
                 } catch (e) {
                     log(e);

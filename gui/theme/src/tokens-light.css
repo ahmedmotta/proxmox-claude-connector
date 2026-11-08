@@ -1,44 +1,70 @@
-/* Light tokens. Every value has been contrast-checked against the surfaces it sits on. */
+/* Light tokens. Every text color has been contrast-checked against the surfaces it sits on. */
 :root {
     color-scheme: light;
 
-    --pcc-bg0: #e8eaed;
-    --pcc-bg1: #ffffff;
-    --pcc-bg2: #f5f6f8;
-    --pcc-bg3: #eceef1;
-    --pcc-bg4: #e1e4e8;
-    --pcc-line: #e2e4e8;
-    --pcc-line2: #cdd1d7;
+    --pcc-bg0: #f4f5f7;          /* canvas between cards */
+    --pcc-bg1: #ffffff;          /* cards, grids, windows */
+    --pcc-bg2: #f9fafb;          /* toolbars, table headers */
+    --pcc-bg3: #f2f4f7;          /* hover, neutral buttons */
+    --pcc-bg4: #e8ebf0;          /* pressed, active neutral */
+    --pcc-line: #eaecf0;
+    --pcc-line2: #d0d5dd;
 
-    --pcc-text: #111214;
-    --pcc-text2: #50545c;        /* 7.6:1 on white */
-    --pcc-text3: #6b7079;        /* 5.0:1 on white */
+    --pcc-sidebar: #ffffff;
+    --pcc-card: #ffffff;
+    --pcc-card-border: #e4e7ec;
+    --pcc-card-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --pcc-elevated: #ffffff;
+    --pcc-elevated-border: #e4e7ec;
+    --pcc-elevated-shadow: 0 20px 48px rgba(16, 24, 40, 0.14), 0 4px 12px rgba(16, 24, 40, 0.06);
+    --pcc-input: #ffffff;
+    --pcc-hover: #f5f6f8;
+    --pcc-pill: #f0f2f5;
+
+    --pcc-text: #101828;         /* 17.8:1 on white */
+    --pcc-text2: #475467;        /* 7.6:1 on white */
+    --pcc-text3: #667085;        /* 4.8:1 on white, 4.5:1 on the canvas */
 
     --pcc-accent: #ff6a00;
     --pcc-accent-hover: #ff7d1f;
     --pcc-accent-press: #e45f00;
     --pcc-accent-ink: #0b0b0c;   /* 6.9:1 */
-    --pcc-accent-text: #b34700;  /* 5.5:1 on white */
-    --pcc-accent-soft: rgba(255, 106, 0, 0.13);
+    --pcc-accent-text: #c2410c;  /* 5.2:1 on white */
+    --pcc-accent-soft: rgba(255, 106, 0, 0.12);
     --pcc-accent-soft2: rgba(255, 106, 0, 0.06);
-    --pcc-select: #fff1e6;          /* selected rows: raised surface + brand rail */
+    --pcc-accent-glow: 0 0 0 1px rgba(255, 106, 0, 0.30), 0 6px 18px rgba(255, 106, 0, 0.16);
+    --pcc-btn-top: #ff7d22;
+    --pcc-btn-bottom: #f26300;
+    --pcc-btn-border: #d95800;
+    --pcc-select: #fff3ea;
 
-    --pcc-ok: #0f8a5f;
-    --pcc-warn: #b77900;
-    --pcc-warn-fill: #f0a500;
-    --pcc-bad: #c8352f;
-    --pcc-bad-soft: rgba(200, 53, 47, 0.08);
+    --pcc-ok: #067647;           /* 5.7:1 on white */
+    --pcc-warn: #b54708;
+    --pcc-warn-fill: #f79009;
+    --pcc-bad: #d92d20;
+    --pcc-bad-soft: rgba(217, 45, 32, 0.08);
 
-    /* the header stays black in both modes: it carries the brand */
-    --pcc-header-bg: #050505;
-    --pcc-header-line: #050505;
+    --pcc-header-bg: #ffffff;
+    --pcc-header-line: #eaecf0;
+    --pcc-header-text: #101828;
+    --pcc-header-text2: #667085;
+    --pcc-header-input: #f4f5f7;
+    --pcc-header-input-line: #e4e7ec;
+    --pcc-header-hover: #f2f4f7;
 
-    --pcc-shadow: 0 12px 32px rgba(17, 18, 20, 0.16), 0 2px 6px rgba(17, 18, 20, 0.08);
-    --pcc-focus: 0 0 0 2px rgba(255, 106, 0, 0.45);
-    --pcc-mask: rgba(245, 246, 248, 0.7);
-    --pcc-backdrop: rgba(17, 18, 20, 0.26);
-    --pcc-scroll: #c9cdd3;
-    --pcc-scroll-hover: #aeb3ba;
+    --pcc-shadow: 0 20px 48px rgba(16, 24, 40, 0.14), 0 4px 12px rgba(16, 24, 40, 0.06);
+    --pcc-focus: 0 0 0 3px rgba(255, 106, 0, 0.22);
+    --pcc-mask: rgba(244, 245, 247, 0.7);
+    --pcc-backdrop: rgba(16, 24, 40, 0.34);
+    --pcc-scroll: #d0d5dd;
+    --pcc-scroll-hover: #98a2b3;
+
+    --pcc-login-bg: #f4f5f7;
+    --pcc-login-glow: rgba(255, 106, 0, 0.16);
+    --pcc-login-glow2: rgba(255, 160, 90, 0.10);
+    --pcc-login-grid: rgba(16, 24, 40, 0.05);
+    --pcc-login-text: #101828;
+    --pcc-login-text2: #667085;
 
     --pcc-sprite-filter: none;
     --pcc-tool-filter: grayscale(1) brightness(0.75);
@@ -46,11 +72,11 @@
     --pcc-check-filter: none;
 
     --pwt-panel-background: #ffffff;
-    --pwt-text-color: #50545c;
-    --pwt-chart-primary: #cdd1d7;
-    --pwt-chart-grid-stroke: #eceef1;
+    --pwt-text-color: #475467;
+    --pwt-chart-primary: #d0d5dd;
+    --pwt-chart-grid-stroke: #eef0f3;
     --pwt-gauge-default: #ff6a00;
-    --pwt-gauge-back: #eceef1;
-    --pwt-gauge-warn: #e6a100;
-    --pwt-gauge-crit: #c8352f;
+    --pwt-gauge-back: #eef0f3;
+    --pwt-gauge-warn: #f79009;
+    --pwt-gauge-crit: #d92d20;
 }

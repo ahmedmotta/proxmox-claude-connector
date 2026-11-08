@@ -16,7 +16,7 @@ set -euo pipefail
 
 REPO="ahmedmotta/proxmox-claude-connector"
 RAW="${PCC_RAW:-https://raw.githubusercontent.com/${REPO}/${PCC_REF:-main}}"   # PCC_REF pins a branch, tag or commit
-GUI_VERSION="0.3.0"
+GUI_VERSION="0.4.0"
 MANAGER_DIR="${PVE_MANAGER_DIR:-/usr/share/pve-manager}"
 THEMES_DIR="${PWT_THEMES_DIR:-/usr/share/javascript/proxmox-widget-toolkit/themes}"
 TEMPLATE="$MANAGER_DIR/index.html.tpl"

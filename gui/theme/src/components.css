@@ -737,7 +737,8 @@
 
 /* ---------------------------------------------------------------- header (classes added by claude-theme.js) */
 :root .pcc-header,
-:root .pcc-header > .x-plain-bodyWrap > .x-plain-body {
+:root .pcc-header > .x-plain-bodyWrap > .x-plain-body,
+:root .pcc-header > .x-panel-bodyWrap > .x-panel-body {
     background-color: var(--pcc-header-bg);
 }
 :root .pcc-header {
@@ -746,78 +747,104 @@
 :root .pcc-brand {
     display: flex;
     align-items: center;
-    gap: 10px;
-    height: 30px;
+    gap: 11px;
+    height: 34px;
     text-decoration: none;
-    color: #f4f4f4;
     white-space: nowrap;
 }
 :root .pcc-brand img {
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     display: block;
 }
 :root .pcc-brand b {
     font-family: var(--pcc-font-display);
     font-weight: 600;
-    font-size: 15px;
-    letter-spacing: -0.01em;
-    color: #f4f4f4;
+    font-size: 16px;
+    letter-spacing: -0.015em;
+    color: var(--pcc-header-text);
 }
+/* the version as a small badge next to the brand */
 :root .pcc-header #versioninfo,
 :root .pcc-header #versioninfo .x-autocontainer-outerCt,
 :root .pcc-header #versioninfo-body {
-    color: #8b8b93;
-    font-size: 12.5px !important;
+    color: var(--pcc-header-text2);
+    font-size: 11.5px !important;
+    font-weight: 500;
+    line-height: 20px !important;
 }
-/* header search */
+:root .pcc-header .pcc-version {
+    display: inline-block;
+    border: 1px solid var(--pcc-header-input-line);
+    border-radius: 999px;
+    padding: 0 9px;
+    background: var(--pcc-header-input);
+    line-height: 20px;
+}
+/* header search: a wide, soft pill */
 :root .pcc-header .x-form-trigger-wrap-default,
 :root .pcc-header .x-form-text-wrap-default {
-    background-color: #131315;
-    border-color: #2a2a2f;
-    border-radius: var(--pcc-radius);
+    background-color: var(--pcc-header-input);
+    border-color: var(--pcc-header-input-line);
+    border-radius: 999px;
 }
 :root .pcc-header .x-form-text-default {
-    background-color: #131315;
-    color: #ededee;
+    background-color: transparent;
+    color: var(--pcc-header-text);
+    padding-left: 14px;
+}
+:root .pcc-header .x-form-text-default::placeholder {
+    color: var(--pcc-header-text2);
 }
 :root .pcc-header .x-form-trigger-wrap-focus {
     border-color: var(--pcc-accent);
+    box-shadow: var(--pcc-focus);
 }
 /* header ghost buttons (documentation, user menu) */
 :root .pcc-header .x-btn.pcc-ghost,
 :root .pcc-header .x-btn.pcc-ghost.x-btn-default-toolbar-small,
 :root .pcc-header .x-btn.pcc-ghost.x-btn-default-small {
     background-color: transparent !important;
-    border-color: #2a2a2f !important;
-    border-radius: var(--pcc-radius);
+    border-color: var(--pcc-header-input-line) !important;
+    border-radius: 999px;
+    background-image: none !important;
+    box-shadow: none !important;
 }
 :root .pcc-header .x-btn.pcc-ghost .x-btn-inner,
 :root .pcc-header .x-btn.pcc-ghost .x-btn-icon-el {
-    color: #d6d6d9 !important;
+    color: var(--pcc-header-text) !important;
     font-weight: 500;
 }
+:root .pcc-header .x-btn.pcc-ghost .x-btn-icon-el {
+    color: var(--pcc-header-text2) !important;
+}
 :root .pcc-header .x-btn.pcc-ghost.x-btn-over {
-    background-color: #1b1b1e !important;
-    border-color: #3a3a40 !important;
+    background-color: var(--pcc-header-hover) !important;
 }
 :root .pcc-header .x-btn.pcc-ghost .x-btn-arrow-right::after,
 :root .pcc-header .x-btn.pcc-ghost .x-btn-wrap::after {
-    filter: invert(0.85);
+    filter: var(--pcc-sprite-filter);
 }
-
-/* theme switcher (rendered by claude-theme.js) */
+/* one primary action in the header: Create VM. Create CT is secondary. */
+:root .pcc-header .x-btn.pcc-header-secondary.x-btn-default-small {
+    background-image: none;
+    background-color: transparent;
+    border-color: var(--pcc-header-input-line);
+    box-shadow: none;
+}
+:root .pcc-header .x-btn.pcc-header-secondary.x-btn-default-small .x-btn-inner,
+:root .pcc-header .x-btn.pcc-header-secondary.x-btn-default-small .x-btn-icon-el {
+    color: var(--pcc-header-text);
+}
+:root .pcc-header .x-btn.pcc-header-secondary.x-btn-default-small.x-btn-over {
+    background-color: var(--pcc-header-hover);
+}
+:root .pcc-header .x-btn-default-small {
+    border-radius: 999px;
+}
 /* the theme switcher's own styles live in claude-theme.js, so it also works under the stock themes */
 
 /* ---------------------------------------------------------------- login window */
-:root .pcc-login .x-window-header-default {
-    background-color: var(--pcc-header-bg);
-    border-color: var(--pcc-header-bg);
-}
-:root .pcc-login .x-window-header-title-default,
-:root .pcc-login .x-window-header-title-default > .x-title-text-default {
-    color: #f4f4f4;
-}
 :root .pcc-login .x-title-icon {
     background-size: contain;
     background-repeat: no-repeat;
