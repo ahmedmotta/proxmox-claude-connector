@@ -1,5 +1,17 @@
 # Changelog
 
+## GUI tab 0.2.0 — 2026-11-08
+
+Redesigned the Datacenter → Claude Connector tab:
+
+- Status strip that says in one sentence whether Claude can act, with a one-click pause.
+- Access level as three plain-language choices instead of a drop-down.
+- Guests shown as a rack with a switch to protect each one, and an optional "only the guests
+  I tick" scope, instead of typing VMIDs.
+- Activity written as sentences ("Shut down guest 105"), filterable to changes or failures,
+  with details on click; refreshes every 30 seconds.
+- Clear guidance when the connector cannot be reached; follows Proxmox's dark theme.
+
 ## 0.1.0 — 2026-11-08
 
 First release.

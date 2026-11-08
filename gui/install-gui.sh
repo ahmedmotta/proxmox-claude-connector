@@ -16,7 +16,7 @@ set -euo pipefail
 
 REPO="ahmedmotta/proxmox-claude-connector"
 RAW="https://raw.githubusercontent.com/${REPO}/main"
-GUI_VERSION="0.1.0"
+GUI_VERSION="0.2.0"
 MANAGER_DIR="${PVE_MANAGER_DIR:-/usr/share/pve-manager}"
 TEMPLATE="$MANAGER_DIR/index.html.tpl"
 SERVED_JS="$MANAGER_DIR/js/claude-connector.js"
