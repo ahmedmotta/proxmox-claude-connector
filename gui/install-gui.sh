@@ -325,9 +325,16 @@ theme_summary() {
 other_nodes() {
   local me
   me=$(hostname)
-  pvesh get /nodes --output-format json 2>/dev/null \
-    | python3 -c 'import json,sys; [print(n["node"]) for n in json.load(sys.stdin) if n.get("status")=="online"]' \
-    | grep -vx "$me" || true
+  { pvesh get /nodes --output-format json 2>/dev/null || true; } | python3 -c '
+import json, sys
+try:
+    nodes = json.load(sys.stdin)
+except ValueError:  # not a cluster member, or pvesh is unavailable
+    nodes = []
+for node in nodes:
+    if node.get("status") == "online":
+        print(node["node"])
+' | grep -vx "$me" || true
 }
 
 brand_args() {
