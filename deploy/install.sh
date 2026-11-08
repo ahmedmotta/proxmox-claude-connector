@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Proxmox Claude Connector - installer
 #
-# Run as root inside a small Debian 12/13 container or VM (recommended), or on a Proxmox node.
+# Run as root inside a small Debian 11/12/13 container or VM (recommended), or on a Proxmox node.
 #   curl -fsSL https://raw.githubusercontent.com/ahmedmotta/proxmox-claude-connector/main/deploy/install.sh | bash
 #
 # Options (environment variables):
@@ -48,7 +48,21 @@ install -d -m 0750 -o "$SVC_USER" -g "$SVC_USER" "$DATA_DIR"
 install -d -m 0750 -o root -g "$SVC_USER" "$CONF_DIR"
 
 say "Installing the connector into $PREFIX/venv"
-python3 -m venv "$PREFIX/venv"
+if python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 11) else 1)'; then
+  python3 -m venv "$PREFIX/venv"
+else
+  # Debian 11 and other older systems ship Python < 3.11: fetch a standalone Python 3.12 with uv.
+  say "System Python is older than 3.11; installing Python 3.12 for the connector"
+  if ! command -v uv >/dev/null; then
+    curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin UV_NO_MODIFY_PATH=1 sh >/dev/null \
+      || python3 -m pip install -q uv
+  fi
+  export UV_PYTHON_INSTALL_DIR="$PREFIX/python"
+  uv python install 3.12 >/dev/null
+  rm -rf "$PREFIX/venv"
+  uv venv --quiet --seed --python 3.12 "$PREFIX/venv"
+  chmod -R a+rX "$PREFIX/python"
+fi
 "$PREFIX/venv/bin/pip" install -q --upgrade pip
 "$PREFIX/venv/bin/pip" install -q --upgrade "$SOURCE"
 ln -sf "$PREFIX/venv/bin/pve-connector" /usr/local/bin/pve-connector

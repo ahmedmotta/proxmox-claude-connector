@@ -51,7 +51,7 @@ anywhere after you approve it once with your own password.
 
 ## Requirements
 
-- Proxmox VE 8 or 9 (single node or cluster), with root SSH access to one node.
+- Proxmox VE 7.4, 8 or 9 (single node or cluster), with root SSH access to one node.
 - A domain on Cloudflare (free plan is fine) for the tunnel that lets Claude reach the connector.
 - A Claude plan that supports custom connectors.
 - About 512 MB of RAM and 4 GB of disk for the connector's container.

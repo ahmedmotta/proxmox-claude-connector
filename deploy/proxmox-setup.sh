@@ -79,9 +79,22 @@ fi
 # ---- container -------------------------------------------------------------------------
 say "Finding a Debian container template"
 pveam update >/dev/null 2>&1 || warn "pveam update failed; using what is already known"
-# Proxmox VE 9 offers Debian 13 templates, Proxmox VE 8 Debian 12; take the newest available.
-TEMPLATE=$(pveam available --section system | awk '/debian-1[23]-standard/ {print $2}' | sort -V | tail -1)
-[[ -n $TEMPLATE ]] || die "no Debian 12/13 template found in the catalog"
+# Each Proxmox release creates containers only up to its own Debian version:
+# PVE 7 -> Debian 11, PVE 8 -> Debian 12, PVE 9 -> Debian 13.
+PVE_MAJOR=$(pveversion | sed -n 's#^pve-manager/\([0-9]*\)\..*#\1#p')
+case "${PVE_MAJOR:-0}" in
+  7) DEBIAN=11 ;;
+  8) DEBIAN=12 ;;
+  *) DEBIAN=13 ;;
+esac
+pick_template() { pveam available --section system | awk -v d="debian-$1-standard" '$2 ~ "^"d {print $2}' | sort -V | tail -1; }
+TEMPLATE=$(pick_template "$DEBIAN")
+[[ -n $TEMPLATE || $DEBIAN -ne 13 ]] || TEMPLATE=$(pick_template 12)
+[[ -n $TEMPLATE ]] || die "no Debian $DEBIAN container template found in the catalog"
+say "Proxmox VE ${PVE_MAJOR:-?} detected; using $TEMPLATE"
+if [[ ${PVE_MAJOR:-0} -lt 8 ]]; then
+  warn "Proxmox VE ${PVE_MAJOR} no longer receives security updates; upgrading to a current release is recommended"
+fi
 if ! pveam list local | grep -q "$TEMPLATE"; then
   say "Downloading $TEMPLATE"
   pveam download local "$TEMPLATE"
