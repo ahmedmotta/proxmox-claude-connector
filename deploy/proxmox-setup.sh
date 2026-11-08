@@ -79,11 +79,14 @@ fi
 # ---- container -------------------------------------------------------------------------
 say "Finding a Debian container template"
 pveam update >/dev/null 2>&1 || warn "pveam update failed; using what is already known"
-# Each Proxmox release creates containers only up to its own Debian version:
-# PVE 7 -> Debian 11, PVE 8 -> Debian 12, PVE 9 -> Debian 13.
+# Proxmox VE 8 creates Debian 12 containers and VE 9 Debian 13. Proxmox VE 7 rejects every Debian
+# 12.x point release ("unsupported debian version '12.12'") and Debian 11 is end-of-life, so on VE 7
+# the container runs Debian 12 as "unmanaged" and this script configures its network itself.
 PVE_MAJOR=$(pveversion | sed -n 's#^pve-manager/\([0-9]*\)\..*#\1#p')
-case "${PVE_MAJOR:-0}" in
-  7) DEBIAN=11 ;;
+PVE_MAJOR=${PVE_MAJOR:-0}
+OSTYPE_ARGS=()
+case "$PVE_MAJOR" in
+  7) DEBIAN=12; OSTYPE_ARGS=(--ostype unmanaged) ;;
   8) DEBIAN=12 ;;
   *) DEBIAN=13 ;;
 esac
@@ -91,13 +94,23 @@ pick_template() { pveam available --section system | awk -v d="debian-$1-standar
 TEMPLATE=$(pick_template "$DEBIAN")
 [[ -n $TEMPLATE || $DEBIAN -ne 13 ]] || TEMPLATE=$(pick_template 12)
 [[ -n $TEMPLATE ]] || die "no Debian $DEBIAN container template found in the catalog"
-say "Proxmox VE ${PVE_MAJOR:-?} detected; using $TEMPLATE"
-if [[ ${PVE_MAJOR:-0} -lt 8 ]]; then
-  warn "Proxmox VE ${PVE_MAJOR} no longer receives security updates; upgrading to a current release is recommended"
+say "Proxmox VE $PVE_MAJOR detected; using $TEMPLATE"
+if [[ $PVE_MAJOR -lt 8 ]]; then
+  warn "Proxmox VE $PVE_MAJOR no longer receives security updates; upgrading to a current release is recommended"
 fi
 if ! pveam list local | grep -q "$TEMPLATE"; then
   say "Downloading $TEMPLATE"
   pveam download local "$TEMPLATE"
+fi
+
+# A previous, unfinished run may have left a connector container behind.
+OLD_CT=$(pct list | awk '$NF == "pve-connector" {print $1}' | head -1)
+if [[ -n $OLD_CT ]]; then
+  ask REPLACE "Container $OLD_CT (pve-connector) already exists. Remove it and start fresh? (yes/no)" "yes"
+  [[ $REPLACE == y* ]] || die "stopped; remove or rename container $OLD_CT first"
+  say "Removing container $OLD_CT"
+  pct stop "$OLD_CT" >/dev/null 2>&1 || true
+  pct destroy "$OLD_CT" --purge >/dev/null
 fi
 
 CTID=$(pvesh get /cluster/nextid)
@@ -106,7 +119,32 @@ pct create "$CTID" "local:vztmpl/$TEMPLATE" \
   --hostname pve-connector --description "Proxmox Claude Connector - https://github.com/$REPO" \
   --tags claude --cores 1 --memory 512 --swap 256 --rootfs "$STORAGE:4" \
   --net0 "name=eth0,bridge=$BRIDGE,ip=$CT_IP" --unprivileged 1 --features nesting=1 \
-  --onboot 1 --start 1 >/dev/null
+  --onboot 1 "${OSTYPE_ARGS[@]}" >/dev/null
+pct start "$CTID"
+
+if [[ ${#OSTYPE_ARGS[@]} -gt 0 ]]; then
+  say "Configuring the container network (unmanaged container on Proxmox VE 7)"
+  NETDIR=$(mktemp -d)
+  {
+    printf 'auto lo\niface lo inet loopback\n\nauto eth0\n'
+    if [[ $CT_IP == dhcp ]]; then
+      printf 'iface eth0 inet dhcp\n'
+    else
+      GW=$(sed -n 's/.*gw=\([^,]*\).*/\1/p' <<<"$CT_IP")
+      printf 'iface eth0 inet static\n    address %s\n' "${CT_IP%%,*}"
+      [[ -n $GW ]] && printf '    gateway %s\n' "$GW"
+    fi
+  } >"$NETDIR/interfaces"
+  printf 'pve-connector\n' >"$NETDIR/hostname"
+  printf '127.0.0.1 localhost\n127.0.1.1 pve-connector\n' >"$NETDIR/hosts"
+  sleep 3
+  pct push "$CTID" "$NETDIR/interfaces" /etc/network/interfaces --perms 0644
+  pct push "$CTID" "$NETDIR/hostname" /etc/hostname --perms 0644
+  pct push "$CTID" "$NETDIR/hosts" /etc/hosts --perms 0644
+  [[ $CT_IP == dhcp ]] || pct push "$CTID" /etc/resolv.conf /etc/resolv.conf --perms 0644
+  rm -rf "$NETDIR"
+  pct exec "$CTID" -- bash -c 'hostname pve-connector; systemctl restart networking || ifup eth0' || true
+fi
 
 say "Waiting for the container network"
 for _ in $(seq 1 60); do
