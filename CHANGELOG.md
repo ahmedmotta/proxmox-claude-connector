@@ -1,5 +1,26 @@
 # Changelog
 
+## GUI 0.3.0 — 2026-11-08
+
+A new look for the whole Proxmox VE web interface, installed with the tab:
+
+- Dark and light themes built on Proxmox's own theme mechanism (`/pwt/themes/`), listed in
+  *Color Theme* and switchable from a new dark / light / stock switcher in the top bar.
+- Black brand bar with logo and name, Inter for text and Space Grotesk for titles (bundled, sized to
+  keep every ExtJS layout intact), one orange accent, neutral selection with an orange rail, brand
+  chart and gauge colors, and one orange button per dialog (Back, Reset, No, Cancel are neutral).
+- Text contrast meets WCAG AA in both themes.
+- First visit switches a browser to the default theme (`--theme dark|light|none`); `?pcc-theme=off`
+  always returns a browser to the stock look.
+- `pve-claude-gui theme dark|light|none|off [--all-nodes]`, `--no-theme`, and `--brand`,
+  `--brand-url`, `--brand-logo` for your own name, link and logo. The choice is kept across updates.
+- The installer checks every theme file against `SHA256SUMS` before copying anything and only uses
+  files it downloaded itself, a git checkout or the copy another cluster node sent along. It no
+  longer restarts pveproxy (not needed; open consoles and shells keep running), writes the GUI
+  template atomically, adds a content hash to the script URLs so browsers never keep a stale copy,
+  and keeps the tab working if the theme cannot be installed. Works on Proxmox VE 7.4, 8 and 9.
+- A browser still set to a brand theme after the theme was turned off goes back to Proxmox's default.
+
 ## GUI tab 0.2.0 — 2026-11-08
 
 Redesigned the Datacenter → Claude Connector tab:

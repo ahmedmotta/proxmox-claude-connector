@@ -33,6 +33,8 @@ anywhere after you approve it once with your own password.
   the Cloudflare tunnel and the SSH trust.
 - **Managed from the Proxmox web interface**: a *Datacenter → Claude Connector* tab to pause Claude,
   change permissions, disconnect sessions and read the audit log.
+- **A new look for the whole Proxmox interface**: dark and light themes with a switcher in the top
+  bar, brand fonts and chart colors. Optional, and one click away from the stock look.
 
 ## How it works
 
@@ -128,7 +130,8 @@ Then, without further input, it:
 3. installs the connector and `cloudflared` inside it as services;
 4. authorizes the connector's SSH key on the node (restricted to the container's IP when it is static);
 5. marks the connector's own container as protected, so Claude can never stop or delete it;
-6. adds the **Claude Connector** tab to the Proxmox web interface on every cluster node;
+6. adds the **Claude Connector** tab and the [new look](#a-new-look-for-the-proxmox-interface) to the
+   Proxmox web interface on every cluster node (`PCC_THEME=off bash -c ...` leaves the look alone);
 7. runs `pve-connector check` and prints a summary with the container's VMID.
 
 A successful run ends with:
@@ -159,13 +162,16 @@ After installation, reload the Proxmox page (Ctrl+F5) and open **Datacenter → 
 
 ![The Claude Connector tab under Datacenter in the Proxmox VE web interface](docs/images/proxmox-tab.png)
 
-- **Status** — running or paused, the URL to give Claude, mode, SSH, version.
-- **Pause connector** — a kill switch: every action from Claude is refused until you resume.
-- **Permissions** — switch between `full`, `safe` and `readonly`, edit protected VMIDs and the VMID
-  allowlist. Changes apply immediately, without restarting anything.
-- **Connected Claude sessions** — see which accounts are connected; disconnect one or all.
-- **Recent actions** — the audit log: every tool call, its result and who made it.
-- **Change approval password**.
+- **Status** — whether Claude can act right now, in one sentence, and the address to add in Claude.
+- **Pause Claude** — a kill switch: every action from Claude is refused until you resume.
+- **What Claude may do** — `Full control`, `Safe` or `Read only`, applied immediately, without
+  restarting anything.
+- **Guests** — every VM and container with a *Protect* switch (Claude can never shut down, stop,
+  delete, roll back or restore over a protected guest), and an option to let Claude see only the
+  guests you tick.
+- **Connected accounts** — each Claude account you approved; disconnect any of them.
+- **Activity** — what Claude did, in plain sentences, with filters for changes and refused actions.
+- **Approval password** and how long Claude waits for long tasks.
 
 Only Proxmox **administrators** can use the tab. It sends your Proxmox login ticket to the connector,
 which asks Proxmox to confirm it and requires `Sys.Modify` on `/`; there are no extra accounts.
@@ -180,17 +186,51 @@ pve-claude-gui install https://pve-mcp.example.com --all-nodes   # e.g. after ad
 pve-claude-gui remove --all-nodes
 ```
 
+## A new look for the Proxmox interface
+
+The setup also installs a theme for the whole Proxmox web interface, in dark and light. It changes
+colors, type and details only: every screen, menu and dialog works exactly as before.
+
+![Proxmox VE with the dark theme](docs/images/theme-dark.png)
+
+![Proxmox VE with the light theme](docs/images/theme-light.png)
+
+- **Switcher in the top bar** — dark, light, or back to the stock Proxmox look. The themes are also
+  listed in Proxmox's own *user menu → Color Theme*. Each browser remembers its own choice.
+- **A default theme** — every browser switches to it once, the first time it opens the interface
+  (dark, unless you choose otherwise; and once more if you pick a new default). After that, the
+  choice belongs to whoever uses that browser.
+- **Readable**: text contrast meets WCAG AA in both themes, the fonts are sized to keep every
+  Proxmox layout intact, and the brand fonts ship with the theme, so nothing loads from the internet.
+- **Always a way back**: open the interface with `?pcc-theme=off` at the end of the address (for
+  example `https://pve.example.com:8006/?pcc-theme=off`) to return that browser to the stock look.
+
+Manage it over SSH on a node:
+
+```bash
+pve-claude-gui theme light --all-nodes    # new default: every browser switches to it once
+pve-claude-gui theme none --all-nodes     # keep the themes available, switch nobody
+pve-claude-gui theme off --all-nodes      # remove the theme, keep the tab
+pve-claude-gui install https://pve-mcp.example.com --all-nodes \
+  --brand "Acme Cloud" --brand-url https://acme.example --brand-logo /root/acme.png   # your own brand
+```
+
+To install without the theme, run the setup with `PCC_THEME=off` in front of `bash -c ...`, or
+install the tab with `--no-theme`. The dark theme builds on Proxmox's own dark theme, which it loads
+from your server rather than copying; the fonts are Inter, Space Grotesk and JetBrains Mono, under
+the SIL Open Font License.
+
 ## Update
 
 Over SSH on the Proxmox node (replace `120` with the connector's container VMID):
 
 ```bash
 pct exec 120 -- bash -c "curl -fsSL https://raw.githubusercontent.com/ahmedmotta/proxmox-claude-connector/main/deploy/install.sh | NONINTERACTIVE=1 bash"
-curl -fsSL https://raw.githubusercontent.com/ahmedmotta/proxmox-claude-connector/main/gui/install-gui.sh -o /tmp/install-gui.sh
-bash /tmp/install-gui.sh install "$(cat /usr/local/share/pve-claude-connector/connector-url)" --all-nodes
+curl -fsSL https://raw.githubusercontent.com/ahmedmotta/proxmox-claude-connector/main/gui/install-gui.sh \
+  | bash -s -- install "$(cat /usr/local/share/pve-claude-connector/connector-url)" --all-nodes
 ```
 
-Your settings and connected sessions are kept.
+Your settings, connected sessions and theme choice are kept.
 
 ## Uninstall
 
@@ -199,7 +239,7 @@ Over SSH on the Proxmox node:
 ```bash
 pct stop 120 && pct destroy 120 --purge            # the connector's container
 pveum user token remove root@pam claude            # its API token
-pve-claude-gui remove --all-nodes                  # the web interface tab
+pve-claude-gui remove --all-nodes                  # the web interface tab and theme
 sed -i --follow-symlinks '/pve-connector@/d' /root/.ssh/authorized_keys   # its SSH key (shared by all nodes)
 ```
 
@@ -384,6 +424,8 @@ Found a vulnerability? See [SECURITY.md](SECURITY.md).
 | No *Claude Connector* tab in Datacenter | Reload with Ctrl+F5; on that node run `pve-claude-gui status`, then `pve-claude-gui install <url>` |
 | The tab says it cannot reach the connector | Open `https://<your-host>/health` from the same browser; the browser needs internet access to reach the tunnel |
 | The tab says you are not an administrator | Log in to Proxmox as a user with `Sys.Modify` on `/` (e.g. `root@pam` or the Administrator role) |
+| You want the stock Proxmox look back | Click the monitor icon in the theme switcher, or open the interface with `?pcc-theme=off`; to remove the theme for everyone: `pve-claude-gui theme off --all-nodes` |
+| The theme does not show after installing | Reload with Ctrl+F5; `pve-claude-gui status` on that node should show the theme files as present |
 
 ## Development
 

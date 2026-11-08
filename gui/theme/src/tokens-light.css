@@ -1,0 +1,56 @@
+/* Light tokens. Every value has been contrast-checked against the surfaces it sits on. */
+:root {
+    color-scheme: light;
+
+    --pcc-bg0: #e8eaed;
+    --pcc-bg1: #ffffff;
+    --pcc-bg2: #f5f6f8;
+    --pcc-bg3: #eceef1;
+    --pcc-bg4: #e1e4e8;
+    --pcc-line: #e2e4e8;
+    --pcc-line2: #cdd1d7;
+
+    --pcc-text: #111214;
+    --pcc-text2: #50545c;        /* 7.6:1 on white */
+    --pcc-text3: #6b7079;        /* 5.0:1 on white */
+
+    --pcc-accent: #ff6a00;
+    --pcc-accent-hover: #ff7d1f;
+    --pcc-accent-press: #e45f00;
+    --pcc-accent-ink: #0b0b0c;   /* 6.9:1 */
+    --pcc-accent-text: #b34700;  /* 5.5:1 on white */
+    --pcc-accent-soft: rgba(255, 106, 0, 0.13);
+    --pcc-accent-soft2: rgba(255, 106, 0, 0.06);
+    --pcc-select: #fff1e6;          /* selected rows: raised surface + brand rail */
+
+    --pcc-ok: #0f8a5f;
+    --pcc-warn: #b77900;
+    --pcc-warn-fill: #f0a500;
+    --pcc-bad: #c8352f;
+    --pcc-bad-soft: rgba(200, 53, 47, 0.08);
+
+    /* the header stays black in both modes: it carries the brand */
+    --pcc-header-bg: #050505;
+    --pcc-header-line: #050505;
+
+    --pcc-shadow: 0 12px 32px rgba(17, 18, 20, 0.16), 0 2px 6px rgba(17, 18, 20, 0.08);
+    --pcc-focus: 0 0 0 2px rgba(255, 106, 0, 0.45);
+    --pcc-mask: rgba(245, 246, 248, 0.7);
+    --pcc-backdrop: rgba(17, 18, 20, 0.26);
+    --pcc-scroll: #c9cdd3;
+    --pcc-scroll-hover: #aeb3ba;
+
+    --pcc-sprite-filter: none;
+    --pcc-tool-filter: grayscale(1) brightness(0.75);
+    --pcc-tool-filter-hover: grayscale(1) brightness(0.45);
+    --pcc-check-filter: none;
+
+    --pwt-panel-background: #ffffff;
+    --pwt-text-color: #50545c;
+    --pwt-chart-primary: #cdd1d7;
+    --pwt-chart-grid-stroke: #eceef1;
+    --pwt-gauge-default: #ff6a00;
+    --pwt-gauge-back: #eceef1;
+    --pwt-gauge-warn: #e6a100;
+    --pwt-gauge-crit: #c8352f;
+}

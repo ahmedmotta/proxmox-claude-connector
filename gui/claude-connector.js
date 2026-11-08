@@ -66,7 +66,11 @@
                     url: '/cluster/resources',
                     params: { type: 'vm' },
                     method: 'GET',
-                    success: function (response) { resolve(response.result.data || []); },
+                    success: function (response) {
+                        resolve((response.result.data || []).filter(function (g) {
+                            return g.type === 'qemu' || g.type === 'lxc';
+                        }));
+                    },
                     failure: function () { resolve([]); },
                 });
             } catch (e) {
@@ -203,6 +207,18 @@
         '.ccx.ccx-dark{--ink:#E6E9EE;--slate:#A9B2BF;--faint:#7D8794;--rail:#38404A;--rail2:#2C333B;--paper:#22282F;',
         '--blue:#7FA8D1;--blue-soft:#2B3A4A;--green:#4CC38A;--green-soft:#1F3A2E;--amber:#E0A040;--amber-soft:#3D3120;',
         '--red:#EF6F63;--red-soft:#43282A}',
+        /* under the brand theme the tab uses the theme's own tokens */
+        'html.pcc-theme .ccx{--ink:var(--pcc-text);--slate:var(--pcc-text2);--faint:var(--pcc-text3);--rail:var(--pcc-line);',
+        '--rail2:var(--pcc-bg2);--paper:var(--pcc-bg1);--blue:var(--pcc-accent-text);--blue-soft:var(--pcc-select);',
+        '--red:var(--pcc-bad);--red-soft:var(--pcc-bad-soft);font-family:var(--pcc-font)}',
+        'html.pcc-theme .ccx h2,html.pcc-theme .ccx-strip-title{font-family:var(--pcc-font-display);letter-spacing:-.01em}',
+        'html.pcc-theme .ccx-level.is-on{border-color:var(--pcc-accent);box-shadow:inset 0 0 0 1px var(--pcc-accent)}',
+        'html.pcc-theme .ccx-level .ccx-tick{color:var(--pcc-accent-text)}',
+        'html.pcc-theme .ccx-switch[aria-checked=true] i.ccx-track{background:var(--pcc-accent)}',
+        'html.pcc-theme .ccx-unit.is-protected::before{background:var(--pcc-accent)}',
+        'html.pcc-theme .ccx-chip.is-on{background:var(--pcc-text);border-color:var(--pcc-text);color:var(--pcc-bg1)}',
+        'html.pcc-theme .ccx-btn-strong{background:var(--pcc-accent);border-color:var(--pcc-accent);color:var(--pcc-accent-ink)}',
+        'html.pcc-theme .ccx-btn-strong:hover{background:var(--pcc-accent-hover);opacity:1}',
         '.ccx *{box-sizing:border-box}',
         '.ccx button{font:inherit;cursor:pointer}',
         '.ccx a{color:var(--blue)}',
@@ -748,5 +764,22 @@
             }
             me.callParent(arguments);
         },
+    });
+
+    // ---------------------------------------------------------------------------------------
+    // If the brand theme was turned off on this node, a browser can still ask for it and would
+    // get no theme file: send that browser back to Proxmox's own default.
+    // ---------------------------------------------------------------------------------------
+    Ext.onReady(function () {
+        try {
+            var theme = Ext.util.Cookies.get('PVEThemeCookie') || '';
+            var known = (window.Proxmox && Proxmox.Utils && Proxmox.Utils.theme_map) || {};
+            if (/^pcc-/.test(theme) && !known[theme]) {
+                Ext.util.Cookies.set('PVEThemeCookie', '__default__', new Date(Date.now() + 10 * 365 * 24 * 3600 * 1000), '/');
+                window.location.reload();
+            }
+        } catch (e) {
+            if (window.console) { console.error('Claude Connector tab:', e); }
+        }
     });
 }());

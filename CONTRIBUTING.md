@@ -24,3 +24,16 @@ Tools live in `src/pve_connector/tools.py`. Each one:
 `gui/claude-connector.js` is plain ExtJS loaded after `pvemanagerlib.js`. Keep it free of
 `'use strict'` (ExtJS `callParent` needs `Function.caller`), wrap anything that touches Proxmox
 classes so a failure can never break the Proxmox interface, and test on Proxmox VE 8 and 9.
+
+## The theme
+
+`gui/theme/` holds the web interface theme. Edit `src/` (colors in `tokens-dark.css` and
+`tokens-light.css`, everything else in `components.css`) and `claude-theme.js`, then run
+`python3 gui/theme/build.py` and commit `dist/` with your change: the installer copies `dist/` as it
+is, after checking it against `dist/SHA256SUMS`, and CI fails when `dist/` is out of date.
+
+- Only colors, fonts, borders and shadows: never change sizes, paddings or positions, or ExtJS
+  layouts will overlap.
+- Check every new color pair for WCAG AA contrast (4.5:1 for text) in both themes.
+- `claude-theme.js` follows the same rules as the tab: no `'use strict'`, and every override wrapped
+  in `try`/`catch`.

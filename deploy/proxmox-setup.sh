@@ -10,7 +10,9 @@
 #   3. install the connector inside it as a service, plus cloudflared if you give a tunnel token
 #   4. give the connector SSH access to this node (host shell + container commands)
 #   5. protect the connector's own container from being stopped or deleted by Claude
-#   6. add the "Claude Connector" tab to the Proxmox web interface on every node
+#   6. add the "Claude Connector" tab and the brand theme to the Proxmox web interface on every node
+#
+# PCC_THEME=light|none|off picks another default for the web interface theme (default: dark).
 set -euo pipefail
 
 REPO="ahmedmotta/proxmox-claude-connector"
@@ -245,9 +247,16 @@ sleep 2
 pct exec "$CTID" -- runuser -u pve-connector -- env PVE_CONNECTOR_ENV=/etc/pve-connector/env \
   /opt/pve-connector/venv/bin/pve-connector check || warn "the check reported problems (see above)"
 
-say "Adding the Claude Connector tab to the Proxmox web interface (all nodes)"
+say "Adding the Claude Connector tab and theme to the Proxmox web interface (all nodes)"
+THEME_ARGS=()  # without PCC_THEME, a node keeps the theme it has (dark on a first install)
+case ${PCC_THEME:-} in
+  "") ;;
+  dark | light | none | off) THEME_ARGS=(--theme "$PCC_THEME") ;;
+  *) warn "PCC_THEME must be dark, light, none or off - ignoring '$PCC_THEME'" ;;
+esac
 if curl -fsSL "$RAW/gui/install-gui.sh" -o "$TMP/install-gui.sh"; then
-  bash "$TMP/install-gui.sh" install "$PUBLIC_URL" --all-nodes || warn "the web interface tab could not be installed"
+  bash "$TMP/install-gui.sh" install "$PUBLIC_URL" --all-nodes "${THEME_ARGS[@]}" \
+    || warn "the web interface tab could not be installed"
 else
   warn "could not download the web interface tab installer"
 fi
